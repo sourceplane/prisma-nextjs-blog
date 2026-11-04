@@ -6,10 +6,11 @@
   "license": "MIT",
   "scripts": {
     "dev": "prisma generate && next dev --webpack -p 3000",
-    "build": "prisma generate && next build --webpack && opennextjs-cloudflare build --skipBuild --skipWranglerConfigCheck && opennextjs-cloudflare populateCache local",
+    "generate": "prisma generate",
+    "build": "next build --webpack && opennextjs-cloudflare build --skipBuild --skipWranglerConfigCheck && opennextjs-cloudflare populateCache local",
     "start": "next start -p 3000",
     "preview": "opennextjs-cloudflare preview",
-    "typecheck": "prisma generate && tsc --noEmit",
+    "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "wire:fixture": "node ../../tooling/wire/render.mjs --template wrangler.template.jsonc --out wrangler.jsonc --map wiring.fixture.json --env stage",
     "db:migrate": "prisma migrate deploy",

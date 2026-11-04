@@ -4,7 +4,7 @@
 |---|---|---|
 | PR0 — the spec | ✅ | PR-1 |
 | PR1 — the blog on Workers and Supabase | ✅ | PR-2 |
-| PR2 — a baseline | planned | PR-3 |
+| PR2 — a baseline | ✅ | PR-3, tagged `baseline-v1` |
 
 ## Departures from the upstream template
 

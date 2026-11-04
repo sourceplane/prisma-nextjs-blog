@@ -3,12 +3,12 @@
   "extends": ["//"],
   "tasks": {
     "build": {
-      "dependsOn": ["^build"],
-      "outputs": [".open-next/**", ".next/**", "!.next/cache/**", "prisma/generated/**"]
+      "dependsOn": ["^build", "generate"],
+      "outputs": [".open-next/**", ".next/**", "!.next/cache/**"]
     },
     "typecheck": {
-      "dependsOn": ["^build"],
-      "outputs": ["prisma/generated/**"]
+      "dependsOn": ["^build", "generate"],
+      "outputs": []
     }
   }
 }

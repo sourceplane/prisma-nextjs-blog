@@ -8,7 +8,7 @@ baseline that makes a copy of it somebody else's product in one landing.**
 
 | | |
 |---|---|
-| Status | In progress — PR1 on main: the site runs on Workers |
+| Status | ✅ Shipped (`baseline-v1`) — proven offline in Baseline CI; not yet live (risk PR-A) |
 | Upstream | [prisma/fullstack-prisma-nextjs-blog](https://github.com/prisma/fullstack-prisma-nextjs-blog) (MIT, declared in its `package.json`), Vercel's [Fullstack Blog with Next.js + Prisma](https://vercel.com/templates/next.js/fullstack-prisma-nextjs-blog), at `6a9c488` |
 | Reference | [postgres-drizzle-starter](https://github.com/sourceplane/postgres-drizzle-starter) — Supabase through Hyperdrive, migrations, db-migrate, row-level security; [admin-dashboard](https://github.com/sourceplane/admin-dashboard) — next-auth on Workers over Supabase, the secret generated in the database |
 | Key | `PR` |

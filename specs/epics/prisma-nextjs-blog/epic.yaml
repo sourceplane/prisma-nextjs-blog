@@ -9,7 +9,7 @@ metadata:
 spec:
   title: "Vercel's Fullstack Blog with Next.js + Prisma on Cloudflare Workers and Supabase"
   summary: "Vercel's Fullstack Blog with Next.js + Prisma — a public feed, drafts, posts in Markdown and GitHub sign-in through next-auth with its Prisma adapter, every read and write through Prisma — run on Cloudflare Workers + Static Assets through @opennextjs/cloudflare, the Prisma client generated for the Workers runtime and built per request over Hyperdrive to a Supabase project's Postgres, both provisioned by Terraform; the schema and the cookie secret applied by db-migrate; publish and delete limited to a post's author; GitHub sign-in connected by its owner after the build; and become an Orun baseline that takes a new product from nothing to live on stage and prod in one landing."
-  state: started
+  state: completed
   milestones:
     - name: "PR0 — the spec"
       exitCriteria:

@@ -29,5 +29,5 @@ Worker plus Static Assets, and its Postgres is reached through the Worker's
 pnpm db:migrate     # upstream's migration, into DATABASE_URL (the Supabase CLI's localhost:54322, say)
 pnpm db:seed        # optional: the template's sample users and posts
 pnpm dev            # prisma generate + next dev, with the Worker's bindings through wrangler's platform proxy
-pnpm build && pnpm preview   # the built Worker under wrangler dev
+pnpm generate && pnpm build && pnpm preview   # the built Worker under wrangler dev (under turbo, `generate` runs first by itself)
 ```
