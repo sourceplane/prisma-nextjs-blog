@@ -1,0 +1,30 @@
+# The epic's declaration. metadata.name equals the directory name; metadata.key
+# is the task-key prefix this epic reserves (PR → PR-1, PR-2, …). Owner, target
+# date and health are the platform's — never written here.
+apiVersion: orun.io/v1
+kind: Epic
+metadata:
+  name: prisma-nextjs-blog
+  key: PR
+spec:
+  title: "Vercel's Fullstack Blog with Next.js + Prisma on Cloudflare Workers and Supabase"
+  summary: "Vercel's Fullstack Blog with Next.js + Prisma — a public feed, drafts, posts in Markdown and GitHub sign-in through next-auth with its Prisma adapter, every read and write through Prisma — run on Cloudflare Workers + Static Assets through @opennextjs/cloudflare, the Prisma client generated for the Workers runtime and built per request over Hyperdrive to a Supabase project's Postgres, both provisioned by Terraform; the schema and the cookie secret applied by db-migrate; publish and delete limited to a post's author; GitHub sign-in connected by its owner after the build; and become an Orun baseline that takes a new product from nothing to live on stage and prod in one landing."
+  state: started
+  milestones:
+    - name: "PR0 — the spec"
+      exitCriteria:
+        - "the repository is born with its intent, CI, tooling and spec index, and this doc set and the task contracts are on main"
+      tasks: [PR-1]
+    - name: "PR1 — the blog on Workers and Supabase"
+      exitCriteria:
+        - "apps/web is the template on Next.js 16.3.8 (Pages Router), built by OpenNext into one Worker, its Prisma client generated for workerd and built per request over the HYPERDRIVE binding, next-auth 4 with database sessions"
+        - "the schema, row-level security and the cookie secret are packages/db migrations, applied by db-migrate; the Supabase and Hyperdrive roots provision stage and prod"
+        - "with no GitHub OAuth App the blog builds, serves its feed signed-out and Log in says how to connect one; with one it offers GitHub sign-in, and only a post's author can publish or delete it"
+        - "`pnpm typecheck`, `pnpm lint`, `pnpm test` and `pnpm build` are green"
+      tasks: [PR-2]
+    - name: "PR2 — a baseline"
+      exitCriteria:
+        - "blueprint.yaml (the console card) and repo-blueprint.yaml (the build) take a new product from nothing to live on stage and prod in one landing, then record it"
+        - "a product built from it carries the product only, renamed throughout to its own name, repository, Worker, Supabase project and Hyperdrive config"
+        - "Baseline CI is green: contract tests, generated component docs, the blueprint read by the pinned orun, the leak gate, the offline bootstrap and the end-to-end tier"
+      tasks: [PR-3]

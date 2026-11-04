@@ -1,0 +1,22 @@
+apiVersion: orun.io/v1
+kind: TaskContract
+metadata:
+  name: PR-2
+  title: "The blog on Workers and Supabase"
+spec:
+  goal: The blog runs on Cloudflare Workers + Static Assets with its Prisma client built per request over Hyperdrive to a Supabase project's Postgres, its schema, row-level security and cookie secret as migrations applied by db-migrate, the Supabase and Hyperdrive roots provisioning stage and prod, only a post's author publishing or deleting it, and GitHub sign-in connected after the build
+  affects:
+    - apps/web
+    - packages/db
+    - infra
+    - tests
+    - tooling/migrations
+    - tooling/wire
+    - pnpm-lock.yaml
+    - pnpm-workspace.yaml
+    - README.md
+    - .gitignore
+  doneWhen:
+    - pnpm typecheck, lint, test and build are green
+    - the built Worker serves the feed over a migrated database, lets a signed-in author write, publish and delete their own post and refuses anyone else, and says GitHub sign-in is not connected until it is
+  gates: []
