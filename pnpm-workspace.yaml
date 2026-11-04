@@ -1,0 +1,16 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+  - "tests/*"
+  - "tooling/*"
+
+# pnpm 10 blocks dependency build scripts unless allow-listed; wrangler's
+# workerd and esbuild need theirs to verify their platform binaries, and the
+# Prisma CLI its engines (the schema engine `prisma migrate diff` runs in
+# tests/db).
+onlyBuiltDependencies:
+  - esbuild
+  - workerd
+  - sharp
+  - prisma
+  - "@prisma/engines"
