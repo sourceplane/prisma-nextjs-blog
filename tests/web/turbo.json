@@ -1,0 +1,18 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build", "@app/web#generate"],
+      "outputs": []
+    },
+    "typecheck": {
+      "dependsOn": ["^build", "@app/web#generate"],
+      "outputs": []
+    },
+    "test": {
+      "dependsOn": ["^build", "@app/web#generate"],
+      "outputs": ["coverage/**"]
+    }
+  }
+}

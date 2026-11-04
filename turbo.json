@@ -1,23 +1,39 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "tasks": {
+    "generate": {
+      "outputs": [
+        "prisma/generated/**"
+      ]
+    },
     "build": {
-      "dependsOn": ["^build"],
-      "outputs": ["dist/**", ".wrangler/**"]
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        "dist/**",
+        ".wrangler/**"
+      ]
     },
     "dev": {
       "cache": false,
       "persistent": true
     },
     "test": {
-      "dependsOn": ["^build"],
-      "outputs": ["coverage/**"]
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        "coverage/**"
+      ]
     },
     "lint": {
       "outputs": []
     },
     "typecheck": {
-      "dependsOn": ["^build"],
+      "dependsOn": [
+        "^build"
+      ],
       "outputs": []
     },
     "wire:fixture": {
@@ -25,7 +41,12 @@
       "outputs": []
     },
     "deploy": {
-      "dependsOn": ["build", "test", "typecheck", "lint"],
+      "dependsOn": [
+        "build",
+        "test",
+        "typecheck",
+        "lint"
+      ],
       "cache": false
     }
   }

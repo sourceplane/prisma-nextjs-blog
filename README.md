@@ -9,9 +9,9 @@ through [`@opennextjs/cloudflare`](https://opennext.js.org/cloudflare), with
 the database a **Supabase Postgres** project reached through **Cloudflare
 Hyperdrive**, both provisioned by Terraform through
 [Orun](https://github.com/sourceplane/orun) and the schema applied by Orun's
-`db-migrate`, deployed by
-[Orun](https://github.com/sourceplane/orun) to stage and prod on every merge.
-Packaging it as an Orun baseline is the next milestone (PR2).
+`db-migrate`, and packaged as an **Orun baseline**: one command takes a new
+product from nothing to live on stage and prod, in its own repository, under
+its own name — in ONE landing.
 
 The template's code is the code. What the port changes is what the Workers
 runtime and a fresh, unattended deployment force:
@@ -32,10 +32,63 @@ runtime and a fresh, unattended deployment force:
 Next.js moves from 13.5 to 16.3.8, and react-markdown from 8 to 10, for
 React 19. Every table in `public` has row-level security, so Supabase's Data
 API serves none of it — not a post, not a session token, not an OAuth
-token.
+token. What the baseline adds is everything needed to make a copy of it
+somebody else's — built the way
+[postgres-drizzle-starter](https://github.com/sourceplane/postgres-drizzle-starter) is.
 See [`specs/epics/prisma-nextjs-blog`](specs/epics/prisma-nextjs-blog/README.md)
 for the design, the milestones and the as-built status, including every
 departure.
+
+## Instantiating a product
+
+```bash
+git clone --depth 1 --branch <baseline-tag> https://github.com/sourceplane/prisma-nextjs-blog
+cd prisma-nextjs-blog
+orun new --blueprint repo-blueprint.yaml --out ~/products/acme-blog --run-hooks --resume \
+  --set reponame=acme-blog --set productname="Acme Journal" \
+  --set githuborg=acme-inc --set subdomain=<workers-dev-subdomain>
+```
+
+Or, once the platform's registry lists it, from the Orun console (Baselines →
+`prisma-nextjs-blog` → Build). There are two phases:
+
+- **`01-product`** creates the repository, mints the five brokered credentials
+  (Cloudflare and Supabase) and lands the whole product as one pull request.
+  Its convergence on `main` provisions and deploys it per environment in a
+  fixed order:
+
+  ```
+  supabase ──▶ cloudflare-hyperdrive ──▶ db-migrate ──▶ web
+  ```
+
+  Each edge is `mode: enforced` on a push to main and advisory on a pull
+  request.
+- **`02-docs`** records the live deployment from probed facts.
+
+**[BOOTSTRAP.md](BOOTSTRAP.md)** is the operator guide;
+[docs/phases/](docs/phases/README.md) has a page per phase. The Supabase
+organization needs room for two projects (stage and prod) — the free plan's
+limit.
+
+The new repository receives the **product only** — the app, the Terraform
+roots, the migrations, the tests, its CI, its tooling, a README of its own
+and its operating contract — renamed throughout to the product's name,
+repository, Worker, Supabase project and Hyperdrive config. None of this
+repository's machinery ships. The card asks for no third-party key: GitHub
+sign-in's OAuth App is the owner's to add afterwards (the product's README,
+"Connecting GitHub sign-in").
+
+| What makes it a baseline | Where |
+|---|---|
+| The console card (inputs, secrets, programme) | `blueprint.yaml` |
+| The build document (modules, phases, hooks) | `repo-blueprint.yaml` |
+| This tree's identity, the product's README and the bootstrap's task contracts | `.baseline/` |
+| The rename engine (product-name seam: `apps/web/lib/site.ts`) | `tooling/rebrand/rebrand.mjs` |
+| The bootstrap's helpers (deferrals, redeploy marker, work-tree strip) | `tooling/bootstrap/` |
+| The deployment-record renderer | `hooks/render-deployment-docs.sh` |
+| The product's context pack | `ai/context/` |
+| The baseline's tests: contract, leak, offline bootstrap and plans, end to end | `testing/`, `.github/workflows/baseline.yml` |
+| Cutting a `baseline-vN` tag | `.github/workflows/tag.yml` |
 
 ## What is here (the product)
 
@@ -89,3 +142,5 @@ carries.
 | Workflow | What it runs | Ships to a product |
 |---|---|---|
 | `ci.yml` | the Orun pipeline, and the only workflow a product carries: `orun plan --changed`, then one job per lane. A pull request runs the verify lanes (the app built and dry-deployed per environment, both Terraform roots checked and planned, the migrations planned), except the bootstrap's own landings (`orun/BASE-*`), where `plan` alone runs and nothing waits for it — the landing was checked in the build box; a merge applies, migrates and deploys stage → prod. The lanes do not typecheck, lint or run the tests: `baseline.yml`'s e2e tier does, on the landing, before each tag. It plans nothing while `intent.yaml` names the placeholder workspace `ws_CHANGE_ME`, as this repository does. A manual run (Orunbase's Deploy button, or Run workflow on `main`) plans the environment and components it names under the push-to-main trigger, so they deploy as a merge deploys them | yes |
+| `baseline.yml` | the baseline's own tiers: contract tests; the blueprint read by the pinned orun, the leak gate, the offline bootstrap and the product's own plans; the product built, migrated into a local Postgres, dry-deployed and served — the feed, "Log in" with GitHub not connected, an author's draft written, published and deleted while another writer is refused — and its tables and secret shut to the Data API's roles | no |
+| `tag.yml` | cuts a `baseline-vN` tag (manual) | no |
