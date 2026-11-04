@@ -1,0 +1,133 @@
+apiVersion: sourceplane.io/v1
+kind: Component
+metadata:
+  name: web
+  description: The blog (Next.js Pages Router, Prisma and next-auth on Cloudflare Workers + Static Assets via @opennextjs/cloudflare, per environment)
+spec:
+  type: cloudflare-workers-assets-turbo
+  lifecycle: production
+  owner: platform
+  # Its pages, attached to it in the workspace's catalog: what the Docs
+  # library shows for it, and what the catalog's docs and runbook checks read.
+  # Generated from what this manifest and its sources declare.
+  docs:
+    overview: docs/overview.md
+    pages:
+      - { path: docs/architecture.md, role: architecture, title: Architecture }
+      - { path: docs/runbook.md, role: runbook, title: Runbook }
+  # `app`, not `web`: a domain and a component share one name space in the
+  # catalog, and a domain called `web` hid this component from it.
+  domain: app
+  path: apps/web
+  # Its own lane per environment: the Next.js build is the longest job in the
+  # plan, and a shared lane would wait on it.
+  lane: isolated
+  # INFRA BEFORE APP, ENFORCED ON MAIN. A merge to main converges the whole
+  # product in one run: the Supabase project, then the Hyperdrive config over
+  # its database, then the migrations, then this Worker. Its deploy reads the
+  # Hyperdrive id (WIRING_CLOUDFLARE_HYPERDRIVE_<ENV>, rendered into the
+  # HYPERDRIVE binding) and its pages query the migrated blog tables and the
+  # cookie secret the migrations generated, and
+  # a job resolves its secrets when it STARTS — so it waits on both,
+  # `mode: enforced`, and the ids the applies lease-published are there. A pull
+  # request deploys nothing, so nothing on one waits: every edge is advisory
+  # there.
+  dependsOn:
+    - component: cloudflare-hyperdrive
+      mode: enforced
+      modeRules:
+        - mode: advisory
+          when:
+            triggerRef: github-pull-request
+    - component: db-migrate
+      mode: enforced
+      modeRules:
+        - mode: advisory
+          when:
+            triggerRef: github-pull-request
+  # The wiring documents the cloudflare-hyperdrive root lease-publishes, one
+  # per deployed environment; tooling/wire/live.mjs picks this job's.
+  secretEnv:
+    WIRING_CLOUDFLARE_HYPERDRIVE_STAGE: "secret://prisma-nextjs-blog/prisma-nextjs-blog/stage/WIRING_CLOUDFLARE_HYPERDRIVE"
+    WIRING_CLOUDFLARE_HYPERDRIVE_PROD: "secret://prisma-nextjs-blog/prisma-nextjs-blog/prod/WIRING_CLOUDFLARE_HYPERDRIVE"
+  # GitHub sign-in's OAuth App (lib/github.ts) and, optionally, the secret
+  # next-auth signs its cookies with (lib/auth-secret.ts): stored per
+  # environment as the product's secrets GITHUB_ID, GITHUB_SECRET and SECRET
+  # (README → Connecting GitHub sign-in), and pushed to the Worker as Worker
+  # SECRETS at deploy (buildCommand below) — read at request time, never in a
+  # bundle. BEST-EFFORT references, wire-now-seed-later: a key nobody has
+  # stored yet is skipped when the job resolves its secrets (no env var, no
+  # failure), and a Worker without GitHub is the blog without sign-in, its
+  # "Log in" page saying how to connect GitHub; without SECRET it uses the one
+  # its database generated — so a fresh product deploys and serves before its
+  # owner has created an OAuth App at all.
+  optionalSecretEnv:
+    GITHUB_ID: "secret://prisma-nextjs-blog/prisma-nextjs-blog/{{ .environment }}/GITHUB_ID"
+    GITHUB_SECRET: "secret://prisma-nextjs-blog/prisma-nextjs-blog/{{ .environment }}/GITHUB_SECRET"
+    SECRET: "secret://prisma-nextjs-blog/prisma-nextjs-blog/{{ .environment }}/SECRET"
+  subscribe:
+    environments:
+      - name: dev
+        profile: verify
+      - name: stage
+        profile: verify
+        profileRules:
+          - profile: deploy
+            when:
+              triggerRef: github-push-main
+      - name: prod
+        profile: verify
+        profileRules:
+          - profile: deploy
+            when:
+              triggerRef: github-push-main
+  parameters:
+    nodeVersion: "22"
+    pnpmVersion: "10.12.1"
+
+    workspaceDir: ../..
+    appDir: .
+
+    turboFilter: "@app/web"
+    wranglerConfig: wrangler.jsonc
+
+    # @opennextjs/cloudflare emits a Worker entrypoint plus a static-assets
+    # directory bound via ASSETS — both deploy in one `wrangler deploy`.
+    workerEntrypoint: .open-next/worker.js
+    assetsDir: .open-next/assets
+
+    # Per-env worker name: prisma-nextjs-blog-web-{dev,stage,prod}.
+    workerName: prisma-nextjs-blog-web
+    environmentAwareWorkerName: true
+
+    # The account's workers.dev subdomain; exported to the smoke step as
+    # ${WORKERS_DEV_SUBDOMAIN} and used to build ${DEPLOYED_URL}.
+    workersDevSubdomain: your-workers-subdomain
+
+    installCommand: pnpm install --frozen-lockfile
+    # wrangler.jsonc is COMMITTED — the fixture render, so the composition's
+    # structure check (`test -f wrangler.jsonc`, before the build, in a fresh
+    # checkout) passes. Stage and prod re-render it here, in their own job
+    # tree, from this environment's wiring document, so the Worker binds the
+    # real Hyperdrive config; dev verifies with the fixture and has no wiring.
+    # The build takes no origin: nothing the blog renders is an absolute link,
+    # and next-auth reads the origin from each request (AUTH_TRUST_HOST in
+    # wrangler.template.jsonc). GitHub's OAuth App and SECRET never reach the
+    # build (`env -u`), so no bundle carries them; on a deploy lane they then
+    # go to the Worker as SECRETS (tooling/wire/worker-secrets.mjs: `wrangler
+    # secret bulk` over stdin; a verify lane holds no Cloudflare credential
+    # and pushes nothing).
+    buildCommand: if [ "${ORUN_ENVIRONMENT}" != dev ]; then node ../../tooling/wire/live.mjs --template wrangler.template.jsonc --out wrangler.jsonc --components cloudflare-hyperdrive --env "${ORUN_ENVIRONMENT}"; fi && env -u GITHUB_ID -u GITHUB_SECRET -u SECRET pnpm exec turbo run build --filter=@app/web && node ../../tooling/wire/worker-secrets.mjs --secret GITHUB_ID --secret GITHUB_SECRET --secret SECRET --worker "prisma-nextjs-blog-web-${ORUN_ENVIRONMENT}" --config wrangler.jsonc
+
+    # Smoke: the feed renders — "Public Feed" is its heading, rendered only
+    # once the page's query through the HYPERDRIVE binding returned (not the
+    # site's name, which is the owner's to change and HTML-escaped when it
+    # carries an `&` or `'`) — and /api/health answers ok: the database
+    # reachable and migrated, the cookie secret there. Each response is
+    # buffered before grep so an early match cannot SIGPIPE curl.
+    smokeCommand: "html=$(curl -sfL \"${DEPLOYED_URL}/\") && echo \"${html}\" | grep -q 'Public Feed' && health=$(curl -sf \"${DEPLOYED_URL}/api/health\") && echo \"${health}\" | grep -q '\"ok\":true'"
+  labels:
+    team: platform
+    layer: delivery
+    surface: web
+    runtime: cloudflare
