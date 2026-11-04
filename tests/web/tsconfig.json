@@ -1,0 +1,30 @@
+{
+  "extends": "../../tooling/tsconfig/web.json",
+  "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "types": [
+      "node",
+      "@cloudflare/workers-types"
+    ],
+    "paths": {
+      "@/*": [
+        "../../apps/web/*"
+      ]
+    },
+    "noUncheckedIndexedAccess": false,
+    // The app's own settings (apps/web/tsconfig.json): the tests type-check
+    // its files, which are upstream's and written for `strict: false`, and the
+    // generated Prisma client imports its modules with `.ts` extensions.
+    "strict": false,
+    "allowImportingTsExtensions": true
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "../../apps/web/cloudflare-env.d.ts"
+  ]
+}
